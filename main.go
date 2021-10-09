@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 	"voicebot-discord/m/config"
 
 	"github.com/bwmarrin/discordgo"
@@ -19,8 +20,9 @@ func main() {
 	}
 
 	dg.AddHandler(messageCreate)
+	dg.AddHandler(voiceChannelCreate)
 
-	dg.Identify.Intents = discordgo.IntentsGuildMessages
+	dg.Identify.Intents = discordgo.IntentsAll
 
 	err = dg.Open()
 	if err != nil {
@@ -48,5 +50,28 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	if m.Content == "pong" {
 		s.ChannelMessageSend(m.ChannelID, "Ping!")
+	}
+}
+
+func voiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
+
+	if v.ChannelID == "835121335851155470" {
+		foo, _ := s.User(v.UserID)
+		targetchannel, err := s.GuildChannelCreate(v.GuildID, foo.Username, discordgo.ChannelTypeGuildVoice)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		fmt.Printf("channelid: %s \n userid: %s \n", v.ChannelID, v.UserID)
+		time.Sleep(250 * time.Millisecond)
+		s.ChannelVoiceJoin(v.GuildID, targetchannel.ID, false, false)
+		err = s.GuildMemberMove(v.GuildID, v.UserID, &targetchannel.ID)
+		if err != nil {
+			fmt.Println(err.Error())
+			return
+		}
+		time.Sleep(10 * time.Second)
+		s.ChannelDelete(targetchannel.ID)
+
 	}
 }
