@@ -8,14 +8,16 @@ import (
 
 var (
 	// Public variables
-	Token string
+	Token         string
+	Masterchannel string
 
 	// Private variables
 	config *configStruct
 )
 
 type configStruct struct {
-	Token string `json:"Token"`
+	Token         string `json:"Token"`
+	Masterchannel string `json:"Masterchannel"`
 }
 
 func ReadConfig() error {
@@ -38,6 +40,7 @@ func ReadConfig() error {
 	}
 
 	Token = config.Token
+	Masterchannel = config.Masterchannel
 
 	return nil
 }

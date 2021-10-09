@@ -55,7 +55,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 func voiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 
-	if v.ChannelID == "835121335851155470" {
+	if v.ChannelID == config.Masterchannel {
 		user, _ := s.User(v.UserID)
 		targetchannel, err := s.GuildChannelCreate(v.GuildID, user.Username, discordgo.ChannelTypeGuildVoice)
 		if err != nil {
