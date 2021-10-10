@@ -24,8 +24,6 @@ func main() {
 	}
 
 	m = make(map[string]int)
-
-	dg.AddHandler(messageCreate)
 	dg.AddHandler(voiceChannelCreate)
 
 	dg.Identify.Intents = discordgo.IntentsAll
@@ -44,21 +42,6 @@ func main() {
 	dg.Close()
 }
 
-func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-
-	if m.Author.ID == s.State.User.ID {
-		return
-	}
-
-	if m.Content == "ping" {
-		s.ChannelMessageSend(m.ChannelID, "Pong!")
-	}
-
-	if m.Content == "pong" {
-		s.ChannelMessageSend(m.ChannelID, "Ping!")
-	}
-}
-
 func voiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 
 	if v.ChannelID == config.Masterchannel {
@@ -70,7 +53,14 @@ func voiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 			fmt.Println(err.Error())
 			return
 		}
-		//s.ChannelVoiceJoin(v.GuildID, targetchannel.ID, false, false)
+		data := discordgo.ChannelEdit{
+			ParentID: config.KategoriId,
+			Topic:    "Beschter Channel Ever",
+			Position: 1,
+		}
+		fmt.Println(config.KategoriId)
+		s.ChannelEditComplex(targetchannel.ID, &data)
+
 		err = s.GuildMemberMove(v.GuildID, v.UserID, &targetchannel.ID)
 		if err != nil {
 			fmt.Println(err.Error())
