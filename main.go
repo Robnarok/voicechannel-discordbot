@@ -11,6 +11,10 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+var (
+	m map[string]int
+)
+
 func main() {
 	config.ReadConfig()
 	dg, err := discordgo.New("Bot " + config.Token)
@@ -18,6 +22,8 @@ func main() {
 		fmt.Println("error creating Discord session,", err)
 		return
 	}
+
+	m = make(map[string]int)
 
 	dg.AddHandler(messageCreate)
 	dg.AddHandler(voiceChannelCreate)
@@ -57,20 +63,43 @@ func voiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 
 	if v.ChannelID == config.Masterchannel {
 		user, _ := s.User(v.UserID)
+
 		targetchannel, err := s.GuildChannelCreate(v.GuildID, user.Username, discordgo.ChannelTypeGuildVoice)
+		m[targetchannel.ID] = 0
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		s.ChannelVoiceJoin(v.GuildID, targetchannel.ID, false, false)
+		//s.ChannelVoiceJoin(v.GuildID, targetchannel.ID, false, false)
 		err = s.GuildMemberMove(v.GuildID, v.UserID, &targetchannel.ID)
 		if err != nil {
 			fmt.Println(err.Error())
 			return
 		}
-		time.Sleep(10 * time.Second)
-
-		s.ChannelDelete(targetchannel.ID)
+		time.Sleep(1 * time.Second)
 
 	}
+
+	for key := range m {
+		if v.ChannelID == key {
+			m[key] = m[key] + 1
+		}
+	}
+
+	if v.BeforeUpdate != nil {
+		for key := range m {
+			if v.BeforeUpdate.ChannelID != v.ChannelID {
+				if v.BeforeUpdate.ChannelID == key {
+					m[key] = m[key] - 1
+					if m[key] == 0 {
+						s.ChannelDelete(key)
+						delete(m, key)
+						return
+					}
+				}
+			}
+		}
+		fmt.Println(m)
+	}
+
 }
