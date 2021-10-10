@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
-	"time"
 	"voicebot-discord/m/config"
 
 	"github.com/bwmarrin/discordgo"
@@ -55,10 +54,8 @@ func voiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 		}
 		data := discordgo.ChannelEdit{
 			ParentID: config.KategoriId,
-			Topic:    "Beschter Channel Ever",
 			Position: 1,
 		}
-		fmt.Println(config.KategoriId)
 		s.ChannelEditComplex(targetchannel.ID, &data)
 
 		err = s.GuildMemberMove(v.GuildID, v.UserID, &targetchannel.ID)
@@ -66,7 +63,6 @@ func voiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 			fmt.Println(err.Error())
 			return
 		}
-		time.Sleep(1 * time.Second)
 
 	}
 
@@ -92,6 +88,5 @@ func voiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 			}
 		}
 	}
-	fmt.Println(m)
 
 }
