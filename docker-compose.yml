@@ -1,0 +1,6 @@
+version: '3'
+services:
+  db:
+     build: .
+     container_name: discord-voicebot
+     restart: unless-stopped
