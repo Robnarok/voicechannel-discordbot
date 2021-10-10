@@ -86,20 +86,22 @@ func voiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 		}
 	}
 
-	if v.BeforeUpdate != nil {
-		for key := range m {
-			if v.BeforeUpdate.ChannelID != v.ChannelID {
-				if v.BeforeUpdate.ChannelID == key {
-					m[key] = m[key] - 1
-					if m[key] == 0 {
-						s.ChannelDelete(key)
-						delete(m, key)
-						return
-					}
+	if v.BeforeUpdate == nil {
+		return
+	}
+
+	for key := range m {
+		if v.BeforeUpdate.ChannelID != v.ChannelID {
+			if v.BeforeUpdate.ChannelID == key {
+				m[key] = m[key] - 1
+				if m[key] == 0 {
+					s.ChannelDelete(key)
+					delete(m, key)
+					return
 				}
 			}
 		}
-		fmt.Println(m)
 	}
+	fmt.Println(m)
 
 }
