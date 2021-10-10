@@ -10,6 +10,7 @@ var (
 	// Public variables
 	Token         string
 	Masterchannel string
+	KategoriId    string
 
 	// Private variables
 	config *configStruct
@@ -18,6 +19,7 @@ var (
 type configStruct struct {
 	Token         string `json:"Token"`
 	Masterchannel string `json:"Masterchannel"`
+	KategoriId    string `json:"KategoriId"`
 }
 
 func ReadConfig() error {
@@ -41,6 +43,7 @@ func ReadConfig() error {
 
 	Token = config.Token
 	Masterchannel = config.Masterchannel
+	KategoriId = config.KategoriId
 
 	return nil
 }
