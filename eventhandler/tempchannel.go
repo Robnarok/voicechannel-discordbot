@@ -97,6 +97,7 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 		if v.BeforeUpdate.ChannelID != v.ChannelID {
 			if v.BeforeUpdate.ChannelID == key {
 				m[key] = m[key] - 1
+				log.Printf("%s - %d\n", key, m[key])
 				if m[key] == 0 {
 					s.ChannelDelete(key)
 					delete(m, key)
