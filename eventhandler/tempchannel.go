@@ -32,9 +32,6 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 		v.ChannelID = ""
 		log.Printf("Interessant\n")
 	}
-	if v.BeforeUpdate.ChannelID == v.ChannelID {
-		return
-	}
 
 	//Debbug Zeugs
 	affectedChannel, _ := s.Channel(v.ChannelID)
