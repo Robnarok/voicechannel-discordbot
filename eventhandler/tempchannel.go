@@ -45,6 +45,10 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 		affectedBeforChannel = tmp.Name
 	}
 
+	if v.BeforeUpdate != nil && v.BeforeUpdate.ChannelID == affectedChannel.ID {
+		return
+	}
+
 	if !logged && v.ChannelID == "" { //Disconnect
 		log.Printf("%s disconnected aus %s\n", user.Username, affectedBeforChannel)
 		logged = true
