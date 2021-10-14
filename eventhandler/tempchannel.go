@@ -32,6 +32,9 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 		v.ChannelID = ""
 		log.Printf("Interessant\n")
 	}
+	if v.BeforeUpdate.ChannelID == v.ChannelID {
+		return
+	}
 
 	//Debbug Zeugs
 	affectedChannel, _ := s.Channel(v.ChannelID)
@@ -86,6 +89,7 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 		if v.ChannelID == key {
 			m[key] = m[key] + 1
 			log.Printf("%s - %d\n", key, m[key])
+			return
 		}
 	}
 
@@ -94,17 +98,16 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 	}
 
 	for key := range m {
-		if v.BeforeUpdate.ChannelID != v.ChannelID {
-			if v.BeforeUpdate.ChannelID == key {
-				m[key] = m[key] - 1
-				log.Printf("%s - %d\n", key, m[key])
-				if m[key] == 0 {
-					s.ChannelDelete(key)
-					delete(m, key)
-					log.Printf("%s destroyed\n", key)
-					return
-				}
+		if v.BeforeUpdate.ChannelID == key {
+			m[key] = m[key] - 1
+			log.Printf("%s - %d\n", key, m[key])
+			if m[key] == 0 {
+				s.ChannelDelete(key)
+				delete(m, key)
+				log.Printf("%s destroyed\n", key)
+				return
 			}
+
 		}
 	}
 
