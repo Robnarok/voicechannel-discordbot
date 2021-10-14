@@ -92,7 +92,6 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 		if v.ChannelID == key {
 			m[key] = m[key] + 1
 			log.Printf("%s - %d\n", key, m[key])
-			return
 		}
 	}
 
