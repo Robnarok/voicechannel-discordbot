@@ -1,6 +1,7 @@
 package eventhandler
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"voicebot-discord/m/config"
@@ -72,8 +73,7 @@ func manipulatePermissions(s *discordgo.Session, voicechannel string, textchanne
 
 }
 
-func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
-
+func writeDownLog(s *discordgo.Session, v *discordgo.VoiceStateUpdate) (*discordgo.User, error) {
 	logged := false
 	user, _ := s.User(v.UserID)
 	err := checkChannelID(v)
@@ -93,7 +93,7 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 
 	if v.BeforeUpdate != nil {
 		if v.BeforeUpdate.ChannelID == v.ChannelID {
-			return
+			return nil, errors.New("Crash")
 		}
 	}
 
@@ -111,61 +111,73 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 		log.Printf("%s wechselt von %s zu %s\n", user.Username, affectedBeforChannel, affectedChannel.Name)
 		logged = true
 	}
+	return user, nil
+}
 
+func createNewChannels(s *discordgo.Session, v *discordgo.VoiceStateUpdate, user *discordgo.User) {
+	targetchannel, err := s.GuildChannelCreate(v.GuildID, user.Username, discordgo.ChannelTypeGuildVoice)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	tartextchannel, err := s.GuildChannelCreate(v.GuildID, user.Username, discordgo.ChannelTypeGuildText)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	tarkategory, err := s.GuildChannelCreate(v.GuildID, user.Username, discordgo.ChannelTypeGuildCategory)
+	temprole, err := s.GuildRoleCreate(v.GuildID)
+
+	s.GuildRoleEdit(v.GuildID, temprole.ID, "voicebotrole: "+temprole.ID, temprole.Color, temprole.Hoist, temprole.Permissions, true)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+	m[targetchannel.ID] = GeneratedChannel{
+		tarkategory.ID,
+		targetchannel.ID,
+		temprole.ID,
+		tartextchannel.ID,
+		0,
+	}
+	log.Printf("Channel erstellt!\n")
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+
+	manipulatePermissions(s, targetchannel.ID, tartextchannel.ID, tarkategory.ID, v.UserID, temprole.ID)
+
+	dat0 := discordgo.ChannelEdit{
+		Position: 4,
+	}
+	s.ChannelEditComplex(tarkategory.ID, &dat0)
+
+	data := discordgo.ChannelEdit{
+		ParentID: tarkategory.ID,
+	}
+	s.ChannelEditComplex(targetchannel.ID, &data)
+	s.ChannelEditComplex(tartextchannel.ID, &data)
+
+	err = s.GuildMemberMove(v.GuildID, v.UserID, &targetchannel.ID)
+	if err != nil {
+		fmt.Println(err.Error())
+		return
+	}
+}
+
+func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
+
+	user, err := writeDownLog(s, v)
+
+	if err != nil {
+		log.Println(err.Error())
+		return
+	}
 	// Ende Debug Zeugs
 
 	if v.ChannelID == config.Masterchannel {
-
-		targetchannel, err := s.GuildChannelCreate(v.GuildID, user.Username, discordgo.ChannelTypeGuildVoice)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		tartextchannel, err := s.GuildChannelCreate(v.GuildID, user.Username, discordgo.ChannelTypeGuildText)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		tarkategory, err := s.GuildChannelCreate(v.GuildID, user.Username, discordgo.ChannelTypeGuildCategory)
-		temprole, err := s.GuildRoleCreate(v.GuildID)
-
-		s.GuildRoleEdit(v.GuildID, temprole.ID, "voicebotrole: "+temprole.ID, temprole.Color, temprole.Hoist, temprole.Permissions, true)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-		m[targetchannel.ID] = GeneratedChannel{
-			tarkategory.ID,
-			targetchannel.ID,
-			temprole.ID,
-			tartextchannel.ID,
-			0,
-		}
-		log.Printf("Channel erstellt!\n")
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
-		manipulatePermissions(s, targetchannel.ID, tartextchannel.ID, tarkategory.ID, v.UserID, temprole.ID)
-
-		dat0 := discordgo.ChannelEdit{
-			Position: 4,
-		}
-		s.ChannelEditComplex(tarkategory.ID, &dat0)
-
-		data := discordgo.ChannelEdit{
-			ParentID: tarkategory.ID,
-		}
-		s.ChannelEditComplex(targetchannel.ID, &data)
-		s.ChannelEditComplex(tartextchannel.ID, &data)
-
-		err = s.GuildMemberMove(v.GuildID, v.UserID, &targetchannel.ID)
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
-
+		createNewChannels(s, v, user)
 	}
 
 	for key := range m {
