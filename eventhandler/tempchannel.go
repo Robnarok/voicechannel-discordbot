@@ -226,10 +226,10 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 			tmpMap := m[key]
 			tmpMap.current = tmpMap.current - 1
 			m[key] = tmpMap
+			s.ChannelMessageSend(tmpMap.textchannel, fmt.Sprintf("%s ist jetzt weg!", user.Username))
 			log.Printf("%s - %d\n", key, m[key].current)
 			if m[key].current == 0 {
 				takeUserPermission(s, tmpMap.textchannel, v.UserID)
-				s.ChannelMessageSend(tmpMap.textchannel, fmt.Sprintf("%s ist jetzt weg!", user.Username))
 				s.ChannelDelete(m[key].voicechannel)
 				s.ChannelDelete(m[key].textchannel)
 				s.ChannelDelete(m[key].kategory)

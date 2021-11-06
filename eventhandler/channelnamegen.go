@@ -23,6 +23,11 @@ func GenerateNewEntry(s *discordgo.Session, v *discordgo.MessageCreate) {
 		s.ChannelMessageSend(v.ChannelID, "Bitte mit \"!add $KATEGORIENAME $TEXTCHANNELNAME $VOICECHANNELNAME\" aufrufen")
 		return
 	}
+
+	for i := range content {
+		content[i] = strings.ReplaceAll(content[i], "_", " ")
+	}
+
 	newentry := database.Entry{
 		content[1],
 		content[2],
