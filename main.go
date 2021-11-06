@@ -1,17 +1,28 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
 	"voicebot-discord/m/config"
+	"voicebot-discord/m/database"
 	"voicebot-discord/m/eventhandler"
 
 	"github.com/bwmarrin/discordgo"
 )
 
 func main() {
+	databasefolders := "sqlite/"
+	databasename := "database.db"
+	os.Mkdir(databasefolders, os.ModePerm)
+
+	databasepath := databasefolders + databasename
+	database.Init(databasepath)
+	if _, err := os.Stat(databasepath); errors.Is(err, os.ErrNotExist) {
+		database.CreateDatabase()
+	}
 	config.ReadConfig()
 	dg, err := discordgo.New("Bot " + config.Token)
 	if err != nil {
@@ -21,6 +32,7 @@ func main() {
 
 	eventhandler.Init()
 	dg.AddHandler(eventhandler.VoiceChannelCreate)
+	dg.AddHandler(eventhandler.GenerateNewEntry)
 
 	dg.Identify.Intents = discordgo.IntentsAll
 

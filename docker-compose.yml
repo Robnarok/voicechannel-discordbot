@@ -1,6 +1,8 @@
 version: '3'
 services:
-  db:
+  voicebot:
      build: .
      container_name: discord-voicebot
      restart: unless-stopped
+     volumes:
+        - ${PWD}/persistenz:/app/sqlite/
