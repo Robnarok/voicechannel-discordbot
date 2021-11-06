@@ -14,6 +14,7 @@ type GeneratedChannel struct {
 	voicechannel string
 	textchannel  string
 	current      int
+	admin        string
 }
 
 var (
@@ -51,7 +52,7 @@ func takeUserPermission(s *discordgo.Session, textchannel string, user string) {
 // manipulatePermissions: Setzt die Permissions der neuen Channel richtig, sodass der Owner volle Rechte hat
 // und nur Mitglieder im Channel/der Gruppe die Textchannel sehen
 func manipulatePermissions(s *discordgo.Session, voicechannel string, textchannel string, kategorie string, user string) {
-	everybode := "835121335851155466"
+	everybode := config.Everybody
 
 	// Jeder in der ROlle darf den Textchannel sehen
 	// Jeder ohne Rolle darf den Textchannel nicht sehen
@@ -129,17 +130,20 @@ func writeDownLog(s *discordgo.Session, v *discordgo.VoiceStateUpdate) (*discord
 
 // createNewChannels: Handelt die komplette Interaktion beim Betreten des "main Channels"
 func createNewChannels(s *discordgo.Session, v *discordgo.VoiceStateUpdate, user *discordgo.User) {
-	targetchannel, err := s.GuildChannelCreate(v.GuildID, user.Username, discordgo.ChannelTypeGuildVoice)
+	targetchannelname := user.Username
+	targetchannel, err := s.GuildChannelCreate(v.GuildID, targetchannelname, discordgo.ChannelTypeGuildVoice)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	tartextchannel, err := s.GuildChannelCreate(v.GuildID, user.Username, discordgo.ChannelTypeGuildText)
+	tartextchannelname := user.Username
+	tartextchannel, err := s.GuildChannelCreate(v.GuildID, tartextchannelname, discordgo.ChannelTypeGuildText)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	tarkategory, err := s.GuildChannelCreate(v.GuildID, user.Username, discordgo.ChannelTypeGuildCategory)
+	tarkategoryname := user.Username
+	tarkategory, err := s.GuildChannelCreate(v.GuildID, tarkategoryname, discordgo.ChannelTypeGuildCategory)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -150,6 +154,7 @@ func createNewChannels(s *discordgo.Session, v *discordgo.VoiceStateUpdate, user
 		targetchannel.ID,
 		tartextchannel.ID,
 		0,
+		v.UserID,
 	}
 	log.Printf("Channel erstellt!\n")
 
@@ -174,7 +179,6 @@ func createNewChannels(s *discordgo.Session, v *discordgo.VoiceStateUpdate, user
 }
 
 func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
-
 	user, err := writeDownLog(s, v)
 
 	if err != nil {
@@ -191,16 +195,20 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 			tmpMap := m[key]
 			tmpMap.current = tmpMap.current + 1
 			m[key] = tmpMap
-			giveUserPermission(s, tmpMap.textchannel, v.UserID)
+			if user.ID != tmpMap.admin {
+				giveUserPermission(s, tmpMap.textchannel, v.UserID)
+			}
 			s.ChannelMessageSend(tmpMap.textchannel, fmt.Sprintf("%s ist dem Channel beigetretten!", user.Username))
 			log.Printf("%s - %d\n", key, m[key].current)
 		}
 	}
 
+	// Early Return bei initialen Join
 	if v.BeforeUpdate == nil {
 		return
 	}
 
+	// User verlässt Channel
 	for key := range m {
 		if v.BeforeUpdate.ChannelID == key {
 			tmpMap := m[key]
