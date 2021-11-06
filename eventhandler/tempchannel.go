@@ -12,7 +12,6 @@ import (
 type GeneratedChannel struct {
 	kategory     string
 	voicechannel string
-	temprole     string
 	textchannel  string
 	current      int
 }
@@ -32,16 +31,29 @@ func checkChannelID(v *discordgo.VoiceStateUpdate) error {
 	return nil
 }
 
-func manipulatePermissions(s *discordgo.Session, voicechannel string, textchannel string, kategorie string, user string, rolle string) {
+func giveUserPermission(s *discordgo.Session, textchannel string, user string) {
+	s.ChannelPermissionSet(
+		textchannel,
+		user,
+		discordgo.PermissionOverwriteTypeMember,
+		1024,
+		0)
+}
+func takeUserPermission(s *discordgo.Session, textchannel string, user string) {
+	s.ChannelPermissionSet(
+		textchannel,
+		user,
+		discordgo.PermissionOverwriteTypeMember,
+		0,
+		1024)
+}
+
+// manipulatePermissions: Setzt die Permissions der neuen Channel richtig, sodass der Owner volle Rechte hat
+// und nur Mitglieder im Channel/der Gruppe die Textchannel sehen
+func manipulatePermissions(s *discordgo.Session, voicechannel string, textchannel string, kategorie string, user string) {
 	everybode := "835121335851155466"
 
 	// Jeder in der ROlle darf den Textchannel sehen
-	s.ChannelPermissionSet(
-		textchannel,
-		rolle,
-		discordgo.PermissionOverwriteTypeRole,
-		1024,
-		0)
 	// Jeder ohne Rolle darf den Textchannel nicht sehen
 	s.ChannelPermissionSet(
 		textchannel,
@@ -70,9 +82,10 @@ func manipulatePermissions(s *discordgo.Session, voicechannel string, textchanne
 		discordgo.PermissionOverwriteTypeMember,
 		1040,
 		0)
-
 }
 
+// writeDownLog: Schreibt die Logs, welches Event passiert ist... Sorgt auch dafür, dass es
+// später nicht zu NUllpointern kommt... Das ist nicht ganz so sauber, muss dringed refactored werden
 func writeDownLog(s *discordgo.Session, v *discordgo.VoiceStateUpdate) (*discordgo.User, error) {
 	logged := false
 	user, _ := s.User(v.UserID)
@@ -114,6 +127,7 @@ func writeDownLog(s *discordgo.Session, v *discordgo.VoiceStateUpdate) (*discord
 	return user, nil
 }
 
+// createNewChannels: Handelt die komplette Interaktion beim Betreten des "main Channels"
 func createNewChannels(s *discordgo.Session, v *discordgo.VoiceStateUpdate, user *discordgo.User) {
 	targetchannel, err := s.GuildChannelCreate(v.GuildID, user.Username, discordgo.ChannelTypeGuildVoice)
 	if err != nil {
@@ -126,30 +140,23 @@ func createNewChannels(s *discordgo.Session, v *discordgo.VoiceStateUpdate, user
 		return
 	}
 	tarkategory, err := s.GuildChannelCreate(v.GuildID, user.Username, discordgo.ChannelTypeGuildCategory)
-	temprole, err := s.GuildRoleCreate(v.GuildID)
-
-	s.GuildRoleEdit(v.GuildID, temprole.ID, "voicebotrole: "+temprole.ID, temprole.Color, temprole.Hoist, temprole.Permissions, true)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
+
 	m[targetchannel.ID] = GeneratedChannel{
 		tarkategory.ID,
 		targetchannel.ID,
-		temprole.ID,
 		tartextchannel.ID,
 		0,
 	}
 	log.Printf("Channel erstellt!\n")
-	if err != nil {
-		fmt.Println(err.Error())
-		return
-	}
 
-	manipulatePermissions(s, targetchannel.ID, tartextchannel.ID, tarkategory.ID, v.UserID, temprole.ID)
+	manipulatePermissions(s, targetchannel.ID, tartextchannel.ID, tarkategory.ID, v.UserID)
 
 	dat0 := discordgo.ChannelEdit{
-		Position: 4,
+		Position: 3,
 	}
 	s.ChannelEditComplex(tarkategory.ID, &dat0)
 
@@ -174,18 +181,18 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 		log.Println(err.Error())
 		return
 	}
-	// Ende Debug Zeugs
-
 	if v.ChannelID == config.Masterchannel {
 		createNewChannels(s, v, user)
 	}
 
+	// User tritt einem Voicechannel bei
 	for key := range m {
 		if v.ChannelID == key {
 			tmpMap := m[key]
 			tmpMap.current = tmpMap.current + 1
 			m[key] = tmpMap
-			s.GuildMemberRoleAdd(v.GuildID, v.UserID, tmpMap.temprole)
+			giveUserPermission(s, tmpMap.textchannel, v.UserID)
+			s.ChannelMessageSend(tmpMap.textchannel, fmt.Sprintf("%s ist dem Channel beigetretten!", user.Username))
 			log.Printf("%s - %d\n", key, m[key].current)
 		}
 	}
@@ -198,14 +205,14 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 		if v.BeforeUpdate.ChannelID == key {
 			tmpMap := m[key]
 			tmpMap.current = tmpMap.current - 1
-			s.GuildMemberRoleRemove(v.GuildID, v.UserID, tmpMap.temprole)
 			m[key] = tmpMap
 			log.Printf("%s - %d\n", key, m[key].current)
 			if m[key].current == 0 {
-				s.GuildRoleDelete(v.GuildID, tmpMap.temprole)
-				s.ChannelDelete(m[key].kategory)
+				takeUserPermission(s, tmpMap.textchannel, v.UserID)
+				s.ChannelMessageSend(tmpMap.textchannel, fmt.Sprintf("%s ist jetzt weg!", user.Username))
 				s.ChannelDelete(m[key].voicechannel)
 				s.ChannelDelete(m[key].textchannel)
+				s.ChannelDelete(m[key].kategory)
 				delete(m, key)
 				log.Printf("%s destroyed\n", key)
 				return
