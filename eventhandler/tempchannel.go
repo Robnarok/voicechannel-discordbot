@@ -130,19 +130,31 @@ func writeDownLog(s *discordgo.Session, v *discordgo.VoiceStateUpdate) (*discord
 
 // createNewChannels: Handelt die komplette Interaktion beim Betreten des "main Channels"
 func createNewChannels(s *discordgo.Session, v *discordgo.VoiceStateUpdate, user *discordgo.User) {
+
+	tarkategoryname := user.Username
+	tartextchannelname := user.Username
 	targetchannelname := user.Username
+
+	randomnames, err := GetRandomEntry()
+	if err == nil {
+		tarkategoryname = randomnames.Kategory
+		tartextchannelname = randomnames.Textchannel
+		targetchannelname = randomnames.Voicechannel
+	}
+	if err != nil {
+		fmt.Errorf(err.Error())
+	}
+
 	targetchannel, err := s.GuildChannelCreate(v.GuildID, targetchannelname, discordgo.ChannelTypeGuildVoice)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	tartextchannelname := user.Username
 	tartextchannel, err := s.GuildChannelCreate(v.GuildID, tartextchannelname, discordgo.ChannelTypeGuildText)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	tarkategoryname := user.Username
 	tarkategory, err := s.GuildChannelCreate(v.GuildID, tarkategoryname, discordgo.ChannelTypeGuildCategory)
 	if err != nil {
 		fmt.Println(err.Error())
