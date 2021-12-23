@@ -33,6 +33,7 @@ func main() {
 	eventhandler.Init()
 	dg.AddHandler(eventhandler.VoiceChannelCreate)
 	dg.AddHandler(eventhandler.GenerateNewEntry)
+	dg.AddHandler(eventhandler.ListAllEntries)
 
 	dg.Identify.Intents = discordgo.IntentsAll
 

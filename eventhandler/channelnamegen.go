@@ -38,8 +38,22 @@ func GenerateNewEntry(s *discordgo.Session, v *discordgo.MessageCreate) {
 
 	//entries[id] = newentry
 
-	output = "Kategorie: " + newentry.Kategorie + "\nTextchannel: " + newentry.Textchannel + "\nVoicechannel: " + newentry.Voicechannel + "\n By " + newentry.Creator
+	output := "Kategorie: " + newentry.Kategory + "\nTextchannel: " + newentry.Textchannel + "\nVoicechannel: " + newentry.Voicechannel + "\n By " + newentry.Creator
 
+	s.ChannelMessageSend(v.ChannelID, output)
+}
+
+func ListAllEntries(s *discordgo.Session, v *discordgo.MessageCreate) {
+	if !(strings.HasPrefix(v.Content, "!list")) {
+		return
+	}
+
+	entries := database.GetAllEntrys()
+
+	output := ""
+	for _, entry := range entries {
+		output += entry.Kategory + " " + entry.Textchannel + " " + entry.Voicechannel + "\n"
+	}
 	s.ChannelMessageSend(v.ChannelID, output)
 }
 
