@@ -86,7 +86,9 @@ func GetAllEntrys() []Entry {
 		var voicechannel string
 		var creator string
 		err = row.Scan(&id, &kategorie, &textchannel, &voicechannel, &creator)
-		fmt.Println(err)
+		if err != nil {
+			fmt.Println(err)
+		}
 		entries = append(entries, Entry{kategorie, textchannel, voicechannel, creator})
 
 	}

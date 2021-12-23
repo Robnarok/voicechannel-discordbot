@@ -107,7 +107,7 @@ func writeDownLog(s *discordgo.Session, v *discordgo.VoiceStateUpdate) (*discord
 
 	if v.BeforeUpdate != nil {
 		if v.BeforeUpdate.ChannelID == v.ChannelID {
-			return nil, errors.New("Crash")
+			return nil, errors.New("Event ohne Channeländerung!")
 		}
 	}
 
@@ -194,7 +194,7 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 	user, err := writeDownLog(s, v)
 
 	if err != nil {
-		log.Println(err.Error())
+		//log.Println(err.Error())
 		return
 	}
 	if v.ChannelID == config.Masterchannel {

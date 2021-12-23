@@ -2,7 +2,6 @@ package eventhandler
 
 import (
 	"errors"
-	"fmt"
 	"math/rand"
 	"strings"
 	"voicebot-discord/m/database"
@@ -63,14 +62,11 @@ func GetRandomEntry() (database.Entry, error) {
 	entries := database.GetAllEntrys()
 	max := len(entries)
 
-	fmt.Println(entries)
-
 	if max == 0 {
 		return database.Entry{"", "", "", ""}, errors.New("Keine Daten vorhanden! Füge vorher neue Entries hinzu!")
 	}
 
 	randomentry := rand.Intn(max-min) + min
 
-	fmt.Print(entries[randomentry])
 	return entries[randomentry], nil
 }
