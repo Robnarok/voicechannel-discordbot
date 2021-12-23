@@ -210,7 +210,7 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 			if user.ID != tmpMap.admin {
 				giveUserPermission(s, tmpMap.textchannel, v.UserID)
 			}
-			s.ChannelMessageSend(tmpMap.textchannel, fmt.Sprintf("%s ist dem Channel beigetretten!", user.Username))
+			s.ChannelMessageSend(tmpMap.textchannel, fmt.Sprintf("%s ist dem Channel beigetreten!", user.Username))
 			log.Printf("%s - %d\n", key, m[key].current)
 		}
 	}
