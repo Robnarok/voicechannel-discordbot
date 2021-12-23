@@ -20,7 +20,7 @@ func GenerateNewEntry(s *discordgo.Session, v *discordgo.MessageCreate) {
 	}
 
 	if len(content) != 4 {
-		s.ChannelMessageSend(v.ChannelID, "Bitte mit \"!add $KATEGORIENAME $TEXTCHANNELNAME $VOICECHANNELNAME\" aufrufen")
+		s.ChannelMessageSend(v.ChannelID, "Bitte mit \"!add $KATEGORIENAME $TEXTCHANNELNAME $VOICECHANNELNAME\" aufrufen. Leerzeichen kann man statt dessen mit _ Schreiben")
 		return
 	}
 
@@ -38,7 +38,9 @@ func GenerateNewEntry(s *discordgo.Session, v *discordgo.MessageCreate) {
 
 	//entries[id] = newentry
 
-	s.ChannelMessageSend(v.ChannelID, "hello")
+	output = "Kategorie: " + newentry.Kategorie + "\nTextchannel: " + newentry.Textchannel + "\nVoicechannel: " + newentry.Voicechannel + "\n By " + newentry.Creator
+
+	s.ChannelMessageSend(v.ChannelID, output)
 }
 
 func GetRandomEntry() (database.Entry, error) {
