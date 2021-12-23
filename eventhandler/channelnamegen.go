@@ -49,9 +49,9 @@ func ListAllEntries(s *discordgo.Session, v *discordgo.MessageCreate) {
 
 	entries := database.GetAllEntrys()
 
-	output := ""
+	output := "Kategoriename, Textchannelname, Voicechannelname\n"
 	for _, entry := range entries {
-		output += entry.Kategory + " " + entry.Textchannel + " " + entry.Voicechannel + "\n"
+		output += "\"" + entry.Kategory + "\", \"" + entry.Textchannel + "\", \"" + entry.Voicechannel + "\"\n"
 	}
 	s.ChannelMessageSend(v.ChannelID, output)
 }
