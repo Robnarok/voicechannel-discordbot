@@ -107,7 +107,7 @@ func writeDownLog(s *discordgo.Session, v *discordgo.VoiceStateUpdate) (*discord
 
 	if v.BeforeUpdate != nil {
 		if v.BeforeUpdate.ChannelID == v.ChannelID {
-			return nil, errors.New("Crash")
+			return nil, errors.New("Event ohne Channeländerung!")
 		}
 	}
 
@@ -194,7 +194,7 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 	user, err := writeDownLog(s, v)
 
 	if err != nil {
-		log.Println(err.Error())
+		//log.Println(err.Error())
 		return
 	}
 	if v.ChannelID == config.Masterchannel {
@@ -210,7 +210,7 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 			if user.ID != tmpMap.admin {
 				giveUserPermission(s, tmpMap.textchannel, v.UserID)
 			}
-			s.ChannelMessageSend(tmpMap.textchannel, fmt.Sprintf("%s ist dem Channel beigetretten!", user.Username))
+			s.ChannelMessageSend(tmpMap.textchannel, fmt.Sprintf("%s ist dem Channel beigetreten!", user.Username))
 			log.Printf("%s - %d\n", key, m[key].current)
 		}
 	}
