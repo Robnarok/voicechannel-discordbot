@@ -40,13 +40,14 @@ func giveUserPermission(s *discordgo.Session, textchannel string, user string) {
 		1024, //allow
 		0)    //deny
 }
-func takeUserPermission(s *discordgo.Session, textchannel string, user string) {
-	s.ChannelPermissionSet(
+func takeUserPermission(s *discordgo.Session, textchannel string, user string) error {
+	error := s.ChannelPermissionSet(
 		textchannel,
 		user,
 		discordgo.PermissionOverwriteTypeMember,
 		0,    //allow
 		1024) //deny
+	return error
 }
 
 // manipulatePermissions: Setzt die Permissions der neuen Channel richtig, sodass der Owner volle Rechte hat
@@ -228,7 +229,10 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 			m[key] = tmpMap
 			s.ChannelMessageSend(tmpMap.textchannel, fmt.Sprintf("%s ist jetzt weg!", user.Username))
 			log.Printf("%s - %d\n", key, m[key].current)
-			takeUserPermission(s, tmpMap.textchannel, v.UserID)
+			err := takeUserPermission(s, tmpMap.textchannel, v.UserID)
+			if err != nil {
+				log.Printf("Error beim nehmen der Permissions")
+			}
 			if m[key].current == 0 {
 				s.ChannelDelete(m[key].voicechannel)
 				s.ChannelDelete(m[key].textchannel)
