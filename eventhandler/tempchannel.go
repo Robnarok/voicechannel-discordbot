@@ -32,8 +32,8 @@ func checkChannelID(v *discordgo.VoiceStateUpdate) error {
 	return nil
 }
 
-func giveUserPermission(s *discordgo.Session, textchannel string, user string) {
-	s.ChannelPermissionSet(
+func giveUserPermission(s *discordgo.Session, textchannel string, user string) error {
+	return s.ChannelPermissionSet(
 		textchannel,
 		user,
 		discordgo.PermissionOverwriteTypeMember,
@@ -41,49 +41,60 @@ func giveUserPermission(s *discordgo.Session, textchannel string, user string) {
 		0)    //deny
 }
 func takeUserPermission(s *discordgo.Session, textchannel string, user string) error {
-	error := s.ChannelPermissionSet(
+	return s.ChannelPermissionSet(
 		textchannel,
 		user,
 		discordgo.PermissionOverwriteTypeMember,
 		0,    //allow
 		1024) //deny
-	return error
 }
 
 // manipulatePermissions: Setzt die Permissions der neuen Channel richtig, sodass der Owner volle Rechte hat
 // und nur Mitglieder im Channel/der Gruppe die Textchannel sehen
-func manipulatePermissions(s *discordgo.Session, voicechannel string, textchannel string, kategorie string, user string) {
+func manipulatePermissions(s *discordgo.Session, voicechannel string, textchannel string, kategorie string, user string) error {
 	everybode := config.Everybody
 
 	// Jeder in der ROlle darf den Textchannel sehen
 	// Jeder ohne Rolle darf den Textchannel nicht sehen
-	s.ChannelPermissionSet(
+	error := s.ChannelPermissionSet(
 		textchannel,
 		everybode,
 		discordgo.PermissionOverwriteTypeRole,
 		0,
 		1024)
+	if error != nil {
+		return error
+	}
 	// Ersteller bekommt Admin rechte auf die Kategorie
-	s.ChannelPermissionSet(
+	error = s.ChannelPermissionSet(
 		kategorie,
 		user,
 		discordgo.PermissionOverwriteTypeMember,
 		1040,
 		0)
+
+	if error != nil {
+		return error
+	}
 	// Ersteller auf Textchannel
-	s.ChannelPermissionSet(
+	error = s.ChannelPermissionSet(
 		textchannel,
 		user,
 		discordgo.PermissionOverwriteTypeMember,
 		1040,
 		0)
+
+	if error != nil {
+		return error
+	}
 	// Ersteller auf Voicechannel
-	s.ChannelPermissionSet(
+	error = s.ChannelPermissionSet(
 		voicechannel,
 		user,
 		discordgo.PermissionOverwriteTypeMember,
 		1040,
 		0)
+	return error
 }
 
 // writeDownLog: Schreibt die Logs, welches Event passiert ist... Sorgt auch dafür, dass es
@@ -209,7 +220,11 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 			tmpMap.current = tmpMap.current + 1
 			m[key] = tmpMap
 			if user.ID != tmpMap.admin {
-				giveUserPermission(s, tmpMap.textchannel, v.UserID)
+				err := giveUserPermission(s, tmpMap.textchannel, v.UserID)
+				if err != nil {
+					log.Println(err)
+					return
+				}
 			}
 			s.ChannelMessageSend(tmpMap.textchannel, fmt.Sprintf("%s ist dem Channel beigetreten!", user.Username))
 			log.Printf("%s - %d\n", key, m[key].current)
@@ -231,7 +246,7 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 			log.Printf("%s - %d\n", key, m[key].current)
 			err := takeUserPermission(s, tmpMap.textchannel, v.UserID)
 			if err != nil {
-				log.Printf("Error beim nehmen der Permissions")
+				log.Println(err)
 			}
 			if m[key].current == 0 {
 				s.ChannelDelete(m[key].voicechannel)
