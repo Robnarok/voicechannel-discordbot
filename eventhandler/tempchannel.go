@@ -161,7 +161,8 @@ func writeDownLog(s *discordgo.Session, v *discordgo.VoiceStateUpdate) (*discord
 	return user, nil
 }
 
-// createNewChannels: Handelt die komplette Interaktion beim Betreten des "main Channels"
+// createNewChannels: Handelt die komplette Interaktion
+// beim Betreten des "main Channels"
 func createNewChannels(s *discordgo.Session, v *discordgo.VoiceStateUpdate, user *discordgo.User) {
 
 	tarkategoryname := user.Username
@@ -178,17 +179,27 @@ func createNewChannels(s *discordgo.Session, v *discordgo.VoiceStateUpdate, user
 		fmt.Errorf(err.Error())
 	}
 
-	targetchannel, err := s.GuildChannelCreate(v.GuildID, targetchannelname, discordgo.ChannelTypeGuildVoice)
+	targetchannel, err := s.GuildChannelCreate(
+		v.GuildID,
+		targetchannelname,
+		discordgo.ChannelTypeGuildVoice)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	tartextchannel, err := s.GuildChannelCreate(v.GuildID, tartextchannelname, discordgo.ChannelTypeGuildText)
+
+	tartextchannel, err := s.GuildChannelCreate(
+		v.GuildID,
+		tartextchannelname,
+		discordgo.ChannelTypeGuildText)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	tarkategory, err := s.GuildChannelCreate(v.GuildID, tarkategoryname, discordgo.ChannelTypeGuildCategory)
+	tarkategory, err := s.GuildChannelCreate(
+		v.GuildID,
+		tarkategoryname,
+		discordgo.ChannelTypeGuildCategory)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -203,7 +214,12 @@ func createNewChannels(s *discordgo.Session, v *discordgo.VoiceStateUpdate, user
 	}
 	log.Printf("Channel erstellt!\n")
 
-	manipulatePermissions(s, targetchannel.ID, tartextchannel.ID, tarkategory.ID, v.UserID)
+	manipulatePermissions(
+		s,
+		targetchannel.ID,
+		tartextchannel.ID,
+		tarkategory.ID,
+		v.UserID)
 
 	dat0 := discordgo.ChannelEdit{
 		Position: 3,
@@ -248,7 +264,9 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 					return
 				}
 			}
-			s.ChannelMessageSend(tmpMap.Textchannel, fmt.Sprintf("%s ist dem Channel beigetreten!", user.Username))
+			s.ChannelMessageSend(
+				tmpMap.Textchannel,
+				fmt.Sprintf("%s ist dem Channel beigetreten!", user.Username))
 			log.Printf("%s - %d\n", key, m[key].Current)
 		}
 	}
@@ -264,7 +282,9 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 			tmpMap := m[key]
 			tmpMap.Current = tmpMap.Current - 1
 			m[key] = tmpMap
-			s.ChannelMessageSend(tmpMap.Textchannel, fmt.Sprintf("%s ist jetzt weg!", user.Username))
+			s.ChannelMessageSend(
+				tmpMap.Textchannel,
+				fmt.Sprintf("%s ist jetzt weg!", user.Username))
 			log.Printf("%s - %d\n", key, m[key].Current)
 			err := takeUserPermission(s, tmpMap.Textchannel, v.UserID)
 			if err != nil {
