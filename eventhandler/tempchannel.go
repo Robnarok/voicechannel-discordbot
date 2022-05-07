@@ -1,9 +1,11 @@
 package eventhandler
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"voicebot-discord/m/config"
 
 	"github.com/bwmarrin/discordgo"
@@ -20,6 +22,19 @@ type GeneratedChannel struct {
 var (
 	m map[string]GeneratedChannel
 )
+
+func writeToJson(foo map[string]int) {
+	file, _ := os.Create("Channel.json")
+	defer file.Close()
+
+	j, err := json.Marshal(foo)
+	if err != nil {
+		fmt.Errorf("main: Error beim JSON Erstellen : %v", err)
+		return
+	}
+	fmt.Println(string(j))
+	file.WriteString(string(j))
+}
 
 func Init() {
 	m = make(map[string]GeneratedChannel)
