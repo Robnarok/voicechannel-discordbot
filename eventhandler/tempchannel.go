@@ -12,21 +12,22 @@ import (
 )
 
 type GeneratedChannel struct {
-	kategory     string
-	voicechannel string
-	textchannel  string
-	current      int
-	admin        string
+	Kategory     string
+	Voicechannel string
+	Textchannel  string
+	Current      int
+	Admin        string
 }
 
 var (
 	m map[string]GeneratedChannel
 )
 
-func writeToJson(foo map[string]int) {
-	file, _ := os.Create("Channel.json")
+func writeToJson(foo map[string]GeneratedChannel) {
+	file, _ := os.Create("sqlite/Channel.json")
 	defer file.Close()
 
+	fmt.Println(m)
 	j, err := json.Marshal(foo)
 	if err != nil {
 		fmt.Errorf("main: Error beim JSON Erstellen : %v", err)
@@ -37,7 +38,12 @@ func writeToJson(foo map[string]int) {
 }
 
 func Init() {
-	m = make(map[string]GeneratedChannel)
+	file, _ := os.ReadFile("sqlite/Channel.json")
+	json.Unmarshal(file, &m)
+	if m == nil {
+		fmt.Println("Erstelle neue Liste...")
+		m = map[string]GeneratedChannel{}
+	}
 }
 
 func checkChannelID(v *discordgo.VoiceStateUpdate) error {
@@ -219,6 +225,7 @@ func createNewChannels(s *discordgo.Session, v *discordgo.VoiceStateUpdate, user
 
 func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 	user, err := writeDownLog(s, v)
+	defer writeToJson(m)
 
 	if err != nil {
 		//log.Println(err.Error())
@@ -232,17 +239,17 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 	for key := range m {
 		if v.ChannelID == key {
 			tmpMap := m[key]
-			tmpMap.current = tmpMap.current + 1
+			tmpMap.Current = tmpMap.Current + 1
 			m[key] = tmpMap
-			if user.ID != tmpMap.admin {
-				err := giveUserPermission(s, tmpMap.textchannel, v.UserID)
+			if user.ID != tmpMap.Admin {
+				err := giveUserPermission(s, tmpMap.Textchannel, v.UserID)
 				if err != nil {
 					log.Println(err)
 					return
 				}
 			}
-			s.ChannelMessageSend(tmpMap.textchannel, fmt.Sprintf("%s ist dem Channel beigetreten!", user.Username))
-			log.Printf("%s - %d\n", key, m[key].current)
+			s.ChannelMessageSend(tmpMap.Textchannel, fmt.Sprintf("%s ist dem Channel beigetreten!", user.Username))
+			log.Printf("%s - %d\n", key, m[key].Current)
 		}
 	}
 
@@ -255,18 +262,18 @@ func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 	for key := range m {
 		if v.BeforeUpdate.ChannelID == key {
 			tmpMap := m[key]
-			tmpMap.current = tmpMap.current - 1
+			tmpMap.Current = tmpMap.Current - 1
 			m[key] = tmpMap
-			s.ChannelMessageSend(tmpMap.textchannel, fmt.Sprintf("%s ist jetzt weg!", user.Username))
-			log.Printf("%s - %d\n", key, m[key].current)
-			err := takeUserPermission(s, tmpMap.textchannel, v.UserID)
+			s.ChannelMessageSend(tmpMap.Textchannel, fmt.Sprintf("%s ist jetzt weg!", user.Username))
+			log.Printf("%s - %d\n", key, m[key].Current)
+			err := takeUserPermission(s, tmpMap.Textchannel, v.UserID)
 			if err != nil {
 				log.Println(err)
 			}
-			if m[key].current == 0 {
-				s.ChannelDelete(m[key].voicechannel)
-				s.ChannelDelete(m[key].textchannel)
-				s.ChannelDelete(m[key].kategory)
+			if m[key].Current == 0 {
+				s.ChannelDelete(m[key].Voicechannel)
+				s.ChannelDelete(m[key].Textchannel)
+				s.ChannelDelete(m[key].Kategory)
 				delete(m, key)
 				log.Printf("%s destroyed\n", key)
 				return
