@@ -9,6 +9,7 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+// GenerateNewEntry generates a new Entry in the Database from Discordcommand !add ... ... ...
 func GenerateNewEntry(s *discordgo.Session, v *discordgo.MessageCreate) {
 	content := strings.SplitAfter(v.Content, " ")
 	// Ignore everythin not starting with !add
@@ -42,6 +43,7 @@ func GenerateNewEntry(s *discordgo.Session, v *discordgo.MessageCreate) {
 	s.ChannelMessageSend(v.ChannelID, output)
 }
 
+// ListAllEntries returns a Discordmessage with all the Databaseentrys
 func ListAllEntries(s *discordgo.Session, v *discordgo.MessageCreate) {
 	if !(strings.HasPrefix(v.Content, "!list")) {
 		return
@@ -56,6 +58,7 @@ func ListAllEntries(s *discordgo.Session, v *discordgo.MessageCreate) {
 	s.ChannelMessageSend(v.ChannelID, output)
 }
 
+// GetRandomEntry returns a random Entry from the Database
 func GetRandomEntry() (database.Entry, error) {
 
 	min := 0
@@ -63,7 +66,7 @@ func GetRandomEntry() (database.Entry, error) {
 	max := len(entries)
 
 	if max == 0 {
-		return database.Entry{"", "", "", ""}, errors.New("Keine Daten vorhanden! Füge vorher neue Entries hinzu!")
+		return database.Entry{"", "", "", ""}, errors.New("keine Daten vorhanden! Füge vorher neue Entries hinzu")
 	}
 
 	randomentry := rand.Intn(max-min) + min

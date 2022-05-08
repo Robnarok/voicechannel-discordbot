@@ -11,6 +11,8 @@ import (
 	"github.com/bwmarrin/discordgo"
 )
 
+// GeneratedChannel is the Struct which contains all current informations of a
+// Channel
 type GeneratedChannel struct {
 	Kategory     string
 	Voicechannel string
@@ -23,20 +25,20 @@ var (
 	m map[string]GeneratedChannel
 )
 
-func writeToJson(foo map[string]GeneratedChannel) {
+func writeToJSON(foo map[string]GeneratedChannel) error {
 	file, _ := os.Create("sqlite/Channel.json")
 	defer file.Close()
 
-	fmt.Println(m)
 	j, err := json.Marshal(foo)
 	if err != nil {
-		fmt.Errorf("main: Error beim JSON Erstellen : %v", err)
-		return
+		return fmt.Errorf("main: Error beim JSON Erstellen : %v", err)
 	}
 	fmt.Println(string(j))
 	file.WriteString(string(j))
+	return nil
 }
 
+// Init generates the map from an exisiting Json, or creates a new Map
 func Init() {
 	file, _ := os.ReadFile("sqlite/Channel.json")
 	json.Unmarshal(file, &m)
@@ -140,7 +142,7 @@ func writeDownLog(s *discordgo.Session, v *discordgo.VoiceStateUpdate) (*discord
 
 	if v.BeforeUpdate != nil {
 		if v.BeforeUpdate.ChannelID == v.ChannelID {
-			return nil, errors.New("Event ohne Channeländerung!")
+			return nil, errors.New("event ohne Channeländerung")
 		}
 	}
 
@@ -176,7 +178,7 @@ func createNewChannels(s *discordgo.Session, v *discordgo.VoiceStateUpdate, user
 		targetchannelname = randomnames.Voicechannel
 	}
 	if err != nil {
-		fmt.Errorf(err.Error())
+		fmt.Printf("createNewChannels: %v", err)
 	}
 
 	targetchannel, err := s.GuildChannelCreate(
@@ -239,12 +241,14 @@ func createNewChannels(s *discordgo.Session, v *discordgo.VoiceStateUpdate, user
 	}
 }
 
+// VoiceChannelCreate creates a new Voicechannel and moves the Creater there
+// Calls all other Funcions to do the work and saves this in the JSON
 func VoiceChannelCreate(s *discordgo.Session, v *discordgo.VoiceStateUpdate) {
 	user, err := writeDownLog(s, v)
-	defer writeToJson(m)
+	defer writeToJSON(m)
 
 	if err != nil {
-		//log.Println(err.Error())
+		log.Println(err.Error())
 		return
 	}
 	if v.ChannelID == config.Masterchannel {
